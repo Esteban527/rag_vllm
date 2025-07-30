@@ -40,7 +40,9 @@ critical_configs = {
     "VLLM_MODEL_GENERATION": VLLM_MODEL_GENERATION,
     "DB_CONNECTION_STRING": DB_CONNECTION_STRING
 }
+
 missing_configs = [key for key, value in critical_configs.items() if not value]
+
 
 # --- Funciones Cacheadas ---
 # Usan el caché de Streamlit para evitar recargar recursos costosos en cada interacción (modelos, datos) en cada interacción.
@@ -100,11 +102,26 @@ def load_system_prompt_cached(_prompt_file_path):
 
 # --- Inicialización y Carga de Recursos ---
 st.set_page_config(page_title="Agente WiFi", layout="centered")
-st.title("🤖 Agente WiFi")
+st.title("Chatbot Corportativo-Seguridad de la información TIGO")
 
 if missing_configs: # Si faltan configuraciones críticas, detiene.
     st.error(f"Error: Faltan configuraciones en .env: {', '.join(missing_configs)}.")
     st.stop()
+BOT_ICON_PATH = "./data/image_2025-07-23_091349207-removebg-preview.png"
+LOGO_PATH = "./data/tigo-logo-11.png"
+
+logo_html = ""
+if os.path.exists(LOGO_PATH):
+    import base64
+    with open(LOGO_PATH, "rb") as f:
+        logo_bytes = f.read()
+        logo_b64 = base64.b64encode(logo_bytes).decode()
+        logo_html = f"""
+        <div style='position:fixed; top:64px; left:28px; z-index:1000;'>
+            <img src='data:image/png;base64,{logo_b64}' width='90'/>
+        </div>
+        """
+    st.markdown(logo_html, unsafe_allow_html=True)
 
 # Carga los recursos principales para la aplicación.
 with st.spinner("Iniciando agente... Por favor, espera."):
@@ -127,19 +144,36 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = [] 
 
 # --- Interfaz de Chat Principal ---
-for role, text in st.session_state.chat_history:
-    with st.chat_message(role, avatar="🧑‍💻" if role == "user" else "🤖"):
-        st.markdown(text)
+for role, message in st.session_state.chat_history:
+    if role == 'user':
+        st.markdown(
+            f"<div style='text-align: right; margin-bottom:8px;'><b>Usuario:</b> {message}</div>",
+            unsafe_allow_html=True
+        )
+    else:
+        icon_html = ""
+        if os.path.exists(BOT_ICON_PATH):
+            import base64
+            with open(BOT_ICON_PATH, "rb") as f:
+                icon_bytes = f.read()
+                icon_b64 = base64.b64encode(icon_bytes).decode()
+                icon_html = f"<img src='data:image/png;base64,{icon_b64}' width='64' style='vertical-align:middle;margin-right:12px;'/>"
+        st.markdown(
+            f"<div style='text-align: left; margin-bottom:8px;'>{icon_html}<b>Bot:</b> {message}</div>",
+            unsafe_allow_html=True
+        )
 
 # Campo de entrada para la pregunta del usuario.
 if user_question := st.chat_input("Escribe tu pregunta sobre WiFi..."):
     # Añade la pregunta del usuario al historial y la muestra.
     st.session_state.chat_history.append(("user", user_question))
-    with st.chat_message("user", avatar="🧑‍💻"):
-        st.markdown(user_question)
+    st.markdown(
+            f"<div style='text-align: right; margin-bottom:8px;'><b>Usuario:</b> {user_question}</div>",
+            unsafe_allow_html=True
+        )
 
     # Placeholder para la respuesta del asistente (para efecto de streaming).
-    assistant_response_placeholder = st.chat_message("assistant", avatar="🤖").empty()
+    assistant_response_placeholder = st.chat_message("assistant", avatar=BOT_ICON_PATH).empty()
     current_response_text = "" # Acumula la respuesta en streaming.
     
     # Realiza la búsqueda RAG y genera la respuesta.

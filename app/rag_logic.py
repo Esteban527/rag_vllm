@@ -14,7 +14,7 @@ def get_all_documents(db_connection_string: str) -> list:
         conn = psycopg2.connect(db_connection_string)
         register_vector(conn) # Habilita el manejo de pgvector.
         with conn.cursor() as cur:
-            cur.execute("SELECT id, text_content, embedding FROM documents_wifi")
+            cur.execute("SELECT id, text_content, embedding FROM documents_security")
             rows = cur.fetchall()
             for row_data in rows:
                 embedding_val = row_data[2]
@@ -63,7 +63,7 @@ def vector_search(query: str, limit: int, db_conn_str: str, vllm_embed: str) -> 
         conn = psycopg2.connect(db_conn_str)
         register_vector(conn)
         with conn.cursor() as cur:
-            cur.execute("SELECT id, text_content, embedding FROM documents_wifi ORDER BY embedding <=> %s DESC LIMIT %s", 
+            cur.execute("SELECT id, text_content, embedding FROM documents_security ORDER BY embedding <=> %s DESC LIMIT %s", 
                         (query_embed_np, limit))
             rows_data = cur.fetchall()
             for row_item in rows_data:

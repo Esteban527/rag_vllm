@@ -67,7 +67,7 @@ def db_connection():
 # --- 5. Definiciones y Carga del Tokenizador ---
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-DATA_DIR = PROJECT_ROOT / "data" / "docx"
+DATA_DIR = PROJECT_ROOT / "data" / "doc"
 
 try:
     filenames = [f for f in os.listdir(DATA_DIR) if f.lower().endswith(".docx")]
@@ -88,7 +88,7 @@ def create_documents_table_if_not_exists(conn):
     """Crea la tabla 'documents_wifi' si no existe."""
     with conn.cursor() as cur:
         cur.execute("""
-        CREATE TABLE IF NOT EXISTS documents_wifi (
+        CREATE TABLE IF NOT EXISTS documents_security (
             id TEXT PRIMARY KEY,
             text_content TEXT,          
             embedding VECTOR(384)
@@ -215,7 +215,7 @@ def main():
         if file_chunks_for_db:
             try:
                 with conn_pg.cursor() as cur:
-                    insert_query = "INSERT INTO documents_wifi (id, text_content, embedding) VALUES (%s, %s, %s) ON CONFLICT (id) DO UPDATE SET text_content = EXCLUDED.text_content, embedding = EXCLUDED.embedding;"
+                    insert_query = "INSERT INTO documents_security (id, text_content, embedding) VALUES (%s, %s, %s) ON CONFLICT (id) DO UPDATE SET text_content = EXCLUDED.text_content, embedding = EXCLUDED.embedding;"
                     data_to_insert = [(c["id"], c["text_content"], c["embedding"]) for c in file_chunks_for_db]
                     cur.executemany(insert_query, data_to_insert)
                     conn_pg.commit()
